@@ -42,15 +42,18 @@ const Footer = () => {
           <div>
             <h2 className="font-semibold mb-5">Get in touch</h2>
             <div className="text-sm space-y-2">
-              <p>+1-234-567-890</p>
+              <p>+94772849767</p>
               <p>contact@example.com</p>
             </div>
           </div>
         </div>
       </div>
       <p className="pt-4 text-center text-sm pb-5">
-        Copyright {new Date().getFullYear()} © <a href="">Chanuka</a>. All Right
-        Reserved.
+        Copyright {new Date().getFullYear()} ©{" "}
+        <a href="https://my-portfolio-jc4a.vercel.app">
+          <b>Chanuka</b>
+        </a>
+        . All Right Reserved.
       </p>
     </footer>
   );
