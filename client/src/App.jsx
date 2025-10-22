@@ -24,18 +24,23 @@ const App = () => {
       <Toaster />
       {!isAdminRoute && <Navbar />}
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
         <Route path="/movies/:id/:date" element={<SeatLayout />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/favourite" element={<Favourite />} />
         <Route path="/Seats" element={<SheatLayout />} />
-        <Route path="/admin/*" element={<Layout />} />
-        <Route index element={<Dashboard />} />
-        <Route path="add-shows" element={<AddShows />} />
-        <Route path="list-shows" element={<ListShows />} />
-        <Route path="list-bookings" element={<ListBookings />} />
+
+        {/* Admin routes nested under Layout so Outlet can render admin pages */}
+        <Route path="/admin" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="add-shows" element={<AddShows />} />
+          <Route path="list-shows" element={<ListShows />} />
+          <Route path="list-bookings" element={<ListBookings />} />
+        </Route>
+
+        {/* Keep a top-level index or default route if needed (optional) */}
       </Routes>
       {!isAdminRoute && <Footer />}
     </>

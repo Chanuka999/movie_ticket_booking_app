@@ -29,7 +29,7 @@ const HeroSection = () => {
           2h 8m
         </div>
       </div>
-      <p className="max-w-md text-grey-300">
+      <p className="max-w-md text-gray-300">
         Discover and book your favorite movies in just a few clicks! Explore the
         latest releases, watch trailers, check showtimes, and reserve your seats
         instantly. Enjoy a seamless and secure movie ticket booking experience
@@ -37,7 +37,7 @@ const HeroSection = () => {
       </p>
       <button
         onClick={() => navigate("/movies")}
-        className="flex items-center gap-1 px-6 py-3 text-sm bg-primary hover:bg-primary-dull transition rounnded-full font-medium cursor-pointer "
+        className="flex items-center gap-1 px-6 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-full font-medium cursor-pointer"
       >
         Explore Movies
         <ArrowRight className="w-5 h-5" />
