@@ -1,4 +1,5 @@
 import { Inngest } from "inngest";
+import mongoose from "mongoose";
 import User from "../model/user.js";
 
 // Create a client to send and receive events
@@ -38,6 +39,25 @@ const syncUserCreation = inngest.createFunction(
   { event: "clerk/user.created" },
   async ({ event }) => {
     try {
+      // Ensure mongoose is connected before attempting DB operations
+      if (mongoose.connection.readyState !== 1) {
+        // wait up to 10s for connection
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("mongoose not connected within timeout"));
+          }, 10000);
+          mongoose.connection.once("connected", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        }).catch((e) => {
+          console.error(
+            "syncUserCreation skipped: DB not connected:",
+            e.message
+          );
+          return; // skip operation
+        });
+      }
       const { id, first_name, last_name, email, image } =
         extractUserFromEvent(event);
       if (!id) {
@@ -64,6 +84,23 @@ const syncUserDeletion = inngest.createFunction(
   { event: "clerk/user.deleted" },
   async ({ event }) => {
     try {
+      if (mongoose.connection.readyState !== 1) {
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("mongoose not connected within timeout"));
+          }, 10000);
+          mongoose.connection.once("connected", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        }).catch((e) => {
+          console.error(
+            "syncUserDeletion skipped: DB not connected:",
+            e.message
+          );
+          return; // skip
+        });
+      }
       const { id } = extractUserFromEvent(event);
       if (!id) {
         console.log("syncUserDeletion: missing id, skipping");
@@ -83,6 +120,23 @@ const syncUserUpdation = inngest.createFunction(
   { event: "clerk/user.updated" },
   async ({ event }) => {
     try {
+      if (mongoose.connection.readyState !== 1) {
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("mongoose not connected within timeout"));
+          }, 10000);
+          mongoose.connection.once("connected", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        }).catch((e) => {
+          console.error(
+            "syncUserUpdation skipped: DB not connected:",
+            e.message
+          );
+          return; // skip
+        });
+      }
       const { id, first_name, last_name, email, image } =
         extractUserFromEvent(event);
       if (!id) {
