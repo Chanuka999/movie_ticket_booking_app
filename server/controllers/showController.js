@@ -83,13 +83,67 @@ export const addShow = async (req, res) => {
 
 export const getShows = async (req, res) => {
   try {
-    const shows = (
-      await Show.find({ showDateTime: { $gte: new Date() } }).populate("movie")
-    ).toSorted({ showDateTime: 1 });
+    // First try: upcoming shows only
+    let shows = await Show.find({ showDateTime: { $gte: new Date() } })
+      .populate("movie")
+      .sort({ showDateTime: 1 });
 
-    const uniqueShows = new Set(shows.map((show) => show.movie));
+    // If no upcoming shows are found, fall back to returning any shows
+    if (!shows || shows.length === 0) {
+      shows = await Show.find() // return all shows as fallback
+        .populate("movie")
+        .sort({ showDateTime: 1 });
+    }
 
-    res.json({ success: true, shows: Array.from(uniqueShows) });
+    // Build unique list of movies keyed by movie _id to avoid issues when
+    // deduping populated Mongoose documents with Set.
+    const moviesById = {};
+    shows.forEach((show) => {
+      const movie = show.movie;
+      if (movie && movie._id) {
+        moviesById[movie._id] = movie;
+      }
+    });
+
+    const uniqueMovies = Object.values(moviesById);
+    res.json({ success: true, shows: uniqueMovies });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const getShow = async (req, res) => {
+  try {
+    const { movieId } = req.params;
+    // Try upcoming shows first
+    let shows = await Show.find({
+      movie: movieId,
+      showDateTime: { $gte: new Date() },
+    }).sort({ showDateTime: 1 });
+
+    // Fallback: if no upcoming shows, return any shows for the movie
+    if (!shows || shows.length === 0) {
+      shows = await Show.find({ movie: movieId }).sort({ showDateTime: 1 });
+    }
+
+    const movie = await Movie.findById(movieId);
+    const dateTime = {};
+
+    shows.forEach((show) => {
+      if (!show || !show.showDateTime) return;
+      const d =
+        show.showDateTime instanceof Date
+          ? show.showDateTime
+          : new Date(show.showDateTime);
+      const date = d.toISOString().split("T")[0];
+      if (!dateTime[date]) {
+        dateTime[date] = [];
+      }
+      dateTime[date].push({ time: d.toISOString(), showId: show._id });
+    });
+
+    res.json({ success: true, movie, dateTime });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
