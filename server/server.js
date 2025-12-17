@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/express";
 import showRouter from "./routes/showRouter.js";
 import bookingRouter from "./routes/bookingRouter.js";
 import adminRouter from "./routes/adminRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 const PORT = 3000;
@@ -29,6 +30,7 @@ try {
   app.use("/api/show", showRouter);
   app.use("/api/booking", bookingRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/user", userRouter);
 
   app.listen(PORT, () => console.log(`server is stating on ${PORT}`));
 } catch (err) {
