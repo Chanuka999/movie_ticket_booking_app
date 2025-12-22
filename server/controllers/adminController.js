@@ -1,5 +1,6 @@
 import Booking from "../model/Booking.js";
 import Show from "../model/Show.js";
+import User from "../model/user.js";
 
 export const isAdmin = async (req, res) => {
   res.json({ success: true, isAdmin: true });
@@ -14,13 +15,14 @@ export const getDashboardData = async (req, res) => {
 
     const totalUser = await User.countDocuments();
 
-    const dashboardData = {
+    const DashboardData = {
       totalBookings: bookings.length,
       totalRevenue: bookings.reduce((acc, booking) => acc + booking.amout, 0),
       activeShows,
       totalUser,
     };
-    res.json({ success: true, dashboardData });
+    // send DashboardData with capital D to match client expectation
+    res.json({ success: true, DashboardData });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
@@ -29,9 +31,10 @@ export const getDashboardData = async (req, res) => {
 
 export const getAllShows = async (req, res) => {
   try {
-    const shows = (
-      await Show.find({ showDateTime: { $gte: new Date() } }).populate("movie")
-    ).toSorted({ showDateTime: 1 });
+    // Use Mongoose sort() on the query instead of Array.toSorted
+    const shows = await Show.find({ showDateTime: { $gte: new Date() } })
+      .sort({ showDateTime: 1 })
+      .populate("movie");
     res.json({ success: true, shows });
   } catch (error) {
     console.error(error);
