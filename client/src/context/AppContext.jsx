@@ -51,7 +51,8 @@ export const AppProvider = ({ children }) => {
 
   const fetchFavouriteMovies = async () => {
     try {
-      const { data } = await axios.get("/api/user/favourite", {
+      // backend route is /api/user/favorite (American spelling)
+      const { data } = await axios.get("/api/user/favorite", {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
       if (data.success) {
