@@ -4,7 +4,8 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
+axios.defaults.baseURL =
+  import.meta.env.VITE_BASE_URL ?? "http://localhost:3000";
 
 export const AppContext = createContext();
 
@@ -33,6 +34,9 @@ export const AppProvider = ({ children }) => {
       }
     } catch (error) {
       console.error(error);
+      const msg =
+        error?.response?.data?.message || error.message || "Network error";
+      toast.error(msg);
     }
   };
 
@@ -46,6 +50,9 @@ export const AppProvider = ({ children }) => {
       }
     } catch (error) {
       console.error(error);
+      const msg =
+        error?.response?.data?.message || error.message || "Network error";
+      toast.error(msg);
     }
   };
 
@@ -62,6 +69,9 @@ export const AppProvider = ({ children }) => {
       }
     } catch (error) {
       console.error(error);
+      const msg =
+        error?.response?.data?.message || error.message || "Network error";
+      toast.error(msg);
     }
   };
 
