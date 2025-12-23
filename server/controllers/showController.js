@@ -46,7 +46,7 @@ export const addShow = async (req, res) => {
         poster_path: movieApiData.poster_path,
         backdrop_path: movieApiData.backdrop_path,
         genres: movieApiData.genres,
-        casts: movieCreditsData.casts,
+        casts: movieCreditsData.cast,
         release_date: movieApiData.release_date,
         original_language: movieApiData.original_language,
         tagline: movieApiData.tagline || "",
@@ -106,7 +106,14 @@ export const getShows = async (req, res) => {
     });
 
     const uniqueMovies = Object.values(moviesById);
-    res.json({ success: true, shows: uniqueMovies });
+
+    // Also include any movies that exist in the Movie collection but
+    // currently have no upcoming shows (so the client sees all movies).
+    const existingMovieIds = uniqueMovies.map((m) => String(m._id));
+    const otherMovies = await Movie.find({ _id: { $nin: existingMovieIds } });
+
+    const allMovies = uniqueMovies.concat(otherMovies);
+    res.json({ success: true, shows: allMovies });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
