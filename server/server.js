@@ -22,7 +22,11 @@ try {
   //middleware
   app.use(express.json());
   app.use(cors());
-  app.use(clerkMiddleware());
+  app.use(
+    clerkMiddleware({
+      secretKey: process.env.CLERK_SECRET_KEY,
+    })
+  );
 
   //api routes
   app.get("/", (req, res) => res.send("server is live"));
