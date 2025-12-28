@@ -8,6 +8,7 @@ import showRouter from "./routes/showRouter.js";
 import bookingRouter from "./routes/bookingRouter.js";
 import adminRouter from "./routes/adminRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import { stripeWebhooks } from "./controllers/stripeWebhooks.js";
 
 const app = express();
 const PORT = 3000;
@@ -18,6 +19,12 @@ try {
   // Now import Inngest functions after DB connection to avoid buffering/timeouts
   const inngestModule = await import("./inngest/index.js");
   const { inngest, functions } = inngestModule;
+
+  app.use(
+    "/api/stripe",
+    express.raw({ type: "application/json" }),
+    stripeWebhooks
+  );
 
   //middleware
   app.use(express.json());
