@@ -1,9 +1,11 @@
 import { Inngest } from "inngest";
-import express from "express";
+
 import mongoose from "mongoose";
 import User from "../model/user.js";
 import Booking from "../model/Booking.js";
 import Show from "../model/Show.js";
+
+import sendEmail from "../configs/nodeMailer.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "movie-ticket-booking" });
@@ -183,10 +185,110 @@ const releaseSeatsAndDeleteBooking = inngest.createFunction(
   }
 );
 
+const sendBookingConfirmationEmail = inngest.createFunction(
+  { id: "send-booking-confirmation-email" },
+  { event: "app/show.booked" },
+  async ({ event, step }) => {
+    const { bookingId } = event.data;
+
+    const booking = await Booking.findById(bookingId)
+      .populate({
+        path: "show",
+        populate: { path: "movie", model: "Movie" },
+      })
+      .populate("user");
+
+    await sendEmail({
+      to: booking.user.email,
+      subject: `Payment Confirmation: "${booking.show.movie.title}" booked!`,
+      body: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Payment Confirmation</title>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background-color:#f4f6f8;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:20px;">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:#0f172a; color:#ffffff; padding:20px; text-align:center;">
+              <h1 style="margin:0; font-size:22px;">🎬 Payment Confirmed</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:25px; color:#333333;">
+              <p style="font-size:15px; margin-top:0;">
+                Hi <strong>${booking.user.name}</strong>,
+              </p>
+
+              <p style="font-size:15px;">
+                Thank you for your payment! Your movie ticket has been successfully booked.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0; background:#f8fafc; border-radius:6px;">
+                <tr>
+                  <td style="padding:12px;"><strong>🎥 Movie</strong></td>
+                  <td style="padding:12px;">${booking.show.movie.title}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px;"><strong>📅 Show Time</strong></td>
+                  <td style="padding:12px;">${booking.show.showDateTime}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px;"><strong>💺 Seats</strong></td>
+                  <td style="padding:12px;">${booking.seats.join(", ")}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px;"><strong>💰 Amount Paid</strong></td>
+                  <td style="padding:12px;">Rs. ${booking.totalAmount}</td>
+                </tr>
+              </table>
+
+              <p style="font-size:14px;">
+                Please keep this email as your payment confirmation.
+              </p>
+
+              <p style="font-size:14px;">
+                Enjoy the show 🍿
+              </p>
+
+              <p style="font-size:14px; margin-bottom:0;">
+                Regards,<br/>
+                <strong>Cinema Booking Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f1f5f9; text-align:center; padding:15px; font-size:12px; color:#64748b;">
+              © 2026 Cinema Booking System. All rights reserved.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
+    });
+  }
+);
+
 // Export the Inngest functions
 export const functions = [
   syncUserCreation,
   syncUserDeletion,
   syncUserUpdation,
   releaseSeatsAndDeleteBooking,
+  sendBookingConfirmationEmail,
 ];
