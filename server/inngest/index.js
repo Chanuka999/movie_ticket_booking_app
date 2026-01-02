@@ -189,19 +189,25 @@ const sendBookingConfirmationEmail = inngest.createFunction(
   { id: "send-booking-confirmation-email" },
   { event: "app/show.booked" },
   async ({ event, step }) => {
-    const { bookingId } = event.data;
+    try {
+      const { bookingId } = event.data;
 
-    const booking = await Booking.findById(bookingId)
-      .populate({
-        path: "show",
-        populate: { path: "movie", model: "Movie" },
-      })
-      .populate("user");
+      const booking = await Booking.findById(bookingId)
+        .populate({
+          path: "show",
+          populate: { path: "movie", model: "Movie" },
+        })
+        .populate("user");
 
-    await sendEmail({
-      to: booking.user.email,
-      subject: `Payment Confirmation: "${booking.show.movie.title}" booked!`,
-      body: `
+      if (!booking || !booking.user || !booking.show) {
+        console.error("Invalid booking data for email confirmation", bookingId);
+        return;
+      }
+
+      await sendEmail({
+        to: booking.user.email,
+        subject: `Payment Confirmation: "${booking.show.movie.title}" booked!`,
+        body: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -243,11 +249,13 @@ const sendBookingConfirmationEmail = inngest.createFunction(
                 </tr>
                 <tr>
                   <td style="padding:12px;"><strong>💺 Seats</strong></td>
-                  <td style="padding:12px;">${booking.seats.join(", ")}</td>
+                  <td style="padding:12px;">${booking.bookedSeats.join(
+                    ", "
+                  )}</td>
                 </tr>
                 <tr>
                   <td style="padding:12px;"><strong>💰 Amount Paid</strong></td>
-                  <td style="padding:12px;">Rs. ${booking.totalAmount}</td>
+                  <td style="padding:12px;">Rs. ${booking.amount}</td>
                 </tr>
               </table>
 
@@ -280,7 +288,10 @@ const sendBookingConfirmationEmail = inngest.createFunction(
 </body>
 </html>
 `,
-    });
+      });
+    } catch (err) {
+      console.error("sendBookingConfirmationEmail error:", err.message || err);
+    }
   }
 );
 

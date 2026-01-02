@@ -37,7 +37,9 @@ const connectDb = async () => {
     }
 
     await mongoose.connect(connectUri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      retryWrites: true,
     });
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error.message || error);
