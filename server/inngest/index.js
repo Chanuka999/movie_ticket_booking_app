@@ -313,9 +313,117 @@ const sendShowReminders = inngest.createFunction(
       for (const show of shows) {
         if (!show.movie || !show.occupiedSeats) continue;
 
-        const userIds = [...new set(Object.values())];
+        const userIds = [...new Set(Object.values(show.occupiedSeats))];
+        if (userIds.length === 0) continue;
+
+        const users = await User.find({ _id: { $in: userIds } }).select(
+          "name email"
+        );
+
+        for (const user of users) {
+          tasks.push({
+            userEmail: user.email,
+            userName: user.name,
+            movieTitle: show.movie.title,
+            showTitle: show.showTime,
+          });
+        }
       }
+      return tasks;
     });
+
+    if (reminderTasks.length === 0) {
+      return { sent: 0, message: "No reminders to send." };
+    }
+
+    const results = await step.run("send-all-reminders", async () => {
+      return await Promise.allSettled(
+        reminderTasks.map((tasks) =>
+          sendEmail({
+            to: tasks.userEmail,
+            subject: `Reminder: Your movie "${tasks.movieTitle}"starts soon`,
+            body: `
+<div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
+    
+    <h2 style="color: #333;">🎬 Movie Reminder</h2>
+
+    <p style="color: #555;">
+      Hi ${tasks.userName || "there"},
+    </p>
+
+    <p style="color: #555;">
+      This is a friendly reminder that your movie
+      <strong> "${tasks.movieTitle}" </strong>
+      is starting soon!
+    </p>
+
+    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0;">
+      <p style="margin: 5px 0;"><strong>🕒 Time:</strong> ${tasks.showTime}</p>
+      <p style="margin: 5px 0;"><strong>📅 Date:</strong> ${tasks.showDate}</p>
+      <p style="margin: 5px 0;"><strong>📍 Theatre:</strong> ${
+        tasks.theatreName
+      }</p>
+    </div>
+
+    <p style="color: #555;">
+      Please arrive at least <strong>15 minutes early</strong> to avoid missing the beginning.
+    </p>
+
+    <p style="color: #555;">
+      Enjoy the show 🍿<br />
+      <strong>${process.env.APP_NAME || "Movie Booking Team"}</strong>
+    </p>
+
+  </div>
+</div>
+`,
+          })
+        )
+      );
+    });
+
+    const sent = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.length - sent;
+
+    return {
+      sent,
+      failed,
+      message: `Sent ${sent} reminder(s),${failed} failed`,
+    };
+  }
+);
+
+const sendNewShowNotification = inngest.createFunction(
+  { id: "send-new-show-notification" },
+  { event: "app/show.added" },
+  async ({ event }) => {
+    const { movieTitle } = event.data;
+
+    const users = await User.find({});
+
+    for (const user of users) {
+      const userEmail = user.email;
+      const userName = user.name;
+
+      const subject = `New Show Added:${movieTitle}`;
+      const body = `<div style=""font-family:Arial,sans-serif;padding:20px;">
+       <h2>Hi ${userName},</h2>
+       <p>We've just added a new show to our library:</p>
+       <h3 style="color:#F84565;">${movieTitle}</h3>
+       <p>Visit our website</p>
+       <br/>
+       <p>Thanks,<br/>Team</p>
+      </div>`;
+
+      await sendEmail({
+        to: userEmail,
+        subject,
+        body,
+      });
+    }
+
+    return { message: "Notification sent." };
   }
 );
 
@@ -326,4 +434,6 @@ export const functions = [
   syncUserUpdation,
   releaseSeatsAndDeleteBooking,
   sendBookingConfirmationEmail,
+  sendShowReminders,
+  sendNewShowNotification,
 ];
