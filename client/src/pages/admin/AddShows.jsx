@@ -18,6 +18,7 @@ const AddShows = () => {
   const [_dateTimeInput, _setDateTimeInput] = useState("");
   const [_showPrice, _setShoprice] = useState("");
   const [addingShow, setAddingShow] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchNowPlayingMovies = async () => {
     try {
@@ -109,51 +110,75 @@ const AddShows = () => {
       fetchNowPlayingMovies();
     }
   }, [user]);
+
+  // Filter movies based on search query
+  const filteredMovies = nowPlayingMovies.filter((movie) =>
+    movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return nowPlayingMovies.length > 0 ? (
     <>
       <Title text1="Add" text2="Shows" />
       <p className="mt-10 text-lg font-medium">Now Playing Movies</p>
+
+      {/* Search Input */}
+      <div className="mt-4 mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search movies by title..."
+          className="w-full max-w-md px-4 py-2 border border-gray-600 rounded-lg outline-none focus:border-primary transition"
+        />
+      </div>
+
       <div className="overflow-x-auto pb-4">
         <div className="group flex flex-wrap gap-4 mt-4 w-max">
-          {nowPlayingMovies.map((movie) => {
-            const movieId = movie._id || movie.id;
-            return (
-              <div
-                key={movieId}
-                className={`relative max-w-40 cursor-pointer group-hover:not-hover:opacity-40 hover:-translate-y-1 transition duration-300`}
-                onClick={() => _setSelectedMovie(movieId)}
-              >
-                <div>
-                  <img
-                    src={image_base_url + movie.poster_path}
-                    alt=""
-                    className="w-full object-cover brightness-90"
-                  />
-                  <div className="text-sm flex items-center justify-between p-2 bg-black/70 w-full absolute bottom-0 left-0">
-                    <p className="flex items-center gap-1 text-gray-400">
-                      <StarIcon className="w-4 h-4 text-primary" />
-                      {typeof movie.vote_average === "number"
-                        ? movie.vote_average.toFixed(1)
-                        : "-"}
-                    </p>
-                    <p className="text-gray-300">
-                      {kConverter(movie.vote_count)}Votes
-                    </p>
-                  </div>
-                </div>
-                {_selectedMovie === movieId && (
-                  <div className="absolute top-2 right-2 flex items-center justify-center bg-primary h-6 w-6 rounded">
-                    <CheckIcon
-                      className="w-4 h-4 text-white"
-                      strokeWidth={2.5}
+          {filteredMovies.length > 0 ? (
+            filteredMovies.map((movie) => {
+              const movieId = movie._id || movie.id;
+              return (
+                <div
+                  key={movieId}
+                  className={`relative max-w-40 cursor-pointer group-hover:not-hover:opacity-40 hover:-translate-y-1 transition duration-300`}
+                  onClick={() => _setSelectedMovie(movieId)}
+                >
+                  <div>
+                    <img
+                      src={image_base_url + movie.poster_path}
+                      alt=""
+                      className="w-full object-cover brightness-90"
                     />
+                    <div className="text-sm flex items-center justify-between p-2 bg-black/70 w-full absolute bottom-0 left-0">
+                      <p className="flex items-center gap-1 text-gray-400">
+                        <StarIcon className="w-4 h-4 text-primary" />
+                        {typeof movie.vote_average === "number"
+                          ? movie.vote_average.toFixed(1)
+                          : "-"}
+                      </p>
+                      <p className="text-gray-300">
+                        {kConverter(movie.vote_count)}Votes
+                      </p>
+                    </div>
                   </div>
-                )}
-                <p className="font-medium truncate">{movie.title}</p>
-                <p className="text-gray-400 text-sm">{movie.release_date}</p>
-              </div>
-            );
-          })}
+                  {_selectedMovie === movieId && (
+                    <div className="absolute top-2 right-2 flex items-center justify-center bg-primary h-6 w-6 rounded">
+                      <CheckIcon
+                        className="w-4 h-4 text-white"
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                  )}
+                  <p className="font-medium truncate">{movie.title}</p>
+                  <p className="text-gray-400 text-sm">{movie.release_date}</p>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-gray-400 text-sm">
+              No movies found matching "{searchQuery}"
+            </p>
+          )}
         </div>
       </div>
 
