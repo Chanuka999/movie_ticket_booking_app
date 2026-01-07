@@ -1,5 +1,5 @@
 import { StarIcon } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import timeFormat from "../lib/timeFormat";
 import { useAppContext } from "../context/AppContext";
@@ -7,18 +7,32 @@ import { useAppContext } from "../context/AppContext";
 const MovieCard = ({ movie = {} }) => {
   const navigate = useNavigate();
   const { image_base_url } = useAppContext();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <div className="flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-translate-y-1 transition duration-300 w-66">
-      <img
-        onClick={() => {
-          navigate(`/movies/${movie?._id}`);
-          scrollTo(0, 0);
-        }}
-        src={image_base_url + movie?.backdrop_path}
-        alt=""
-        className="rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer"
-      />
+      <div className="relative rounded-lg h-52 w-full overflow-hidden">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gray-700 animate-pulse" />
+        )}
+        <img
+          onClick={() => {
+            navigate(`/movies/${movie?._id}`);
+            scrollTo(0, 0);
+          }}
+          src={image_base_url.replace("/w500", "/w300") + movie?.backdrop_path}
+          srcSet={`${
+            image_base_url.replace("/w500", "/w300") + movie?.backdrop_path
+          } 300w, ${image_base_url + movie?.backdrop_path} 500w`}
+          sizes="(max-width: 640px) 300px, 500px"
+          alt={movie?.title || "Movie backdrop"}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          className={`rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer transition-opacity duration-300 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      </div>
 
       <p className="font-semibold mt-2 truncate">
         {movie?.title ?? "Untitled"}
