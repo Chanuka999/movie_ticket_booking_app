@@ -89,7 +89,9 @@ stripe listen --forward-to http://localhost:3000/api/stripe
 export STRIPE_WEBHOOK_SECRET=<secret>
 ```
 
-## Image Upload Specs
+## Image Upload Specs & Performance Optimization
+
+### Image Service Configuration
 
 - Recommended service: Cloudinary (dependency already included on the server)
 - Env vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_UPLOAD_PRESET
@@ -97,6 +99,18 @@ export STRIPE_WEBHOOK_SECRET=<secret>
 - Suggested dimensions: posters 1000x1500 (2:3), backdrops 1920x1080 (16:9)
 - Caching: serve transformed, width-capped URLs (e.g., `/upload/w_800,q_auto`)
 - If you keep using TMDB art, continue to set VITE_TMDB_IMAGE_BASE_URL for CDN-hosted images
+
+### Performance Optimizations Implemented
+
+- **Lazy Loading**: All movie images use native `loading="lazy"` attribute to defer offscreen images
+- **Responsive Images**: `srcset` and `sizes` attributes for serving optimal image sizes per device
+- **Image Preloading**: Hero section backgrounds are preloaded to eliminate flickering
+- **Optimized TMDB Sizes**:
+  - Movie cards: w300 (small screens) → w500 (larger screens)
+  - Movie posters: w500 → w780 for detail pages
+  - Cast thumbnails: w185 (optimized for small circular avatars)
+- **Loading Skeletons**: Animated placeholders while images load for better UX
+- **Smooth Transitions**: Fade-in effects when images finish loading
 
 ## Useful Scripts
 
