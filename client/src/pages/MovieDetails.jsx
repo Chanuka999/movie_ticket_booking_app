@@ -14,6 +14,8 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [show, setShow] = useState(null);
+  const [posterLoaded, setPosterLoaded] = useState(false);
+  const [castImagesLoaded, setCastImagesLoaded] = useState({});
 
   const {
     shows,
@@ -62,11 +64,26 @@ const MovieDetails = () => {
   return show ? (
     <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-50">
       <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto">
-        <img
-          src={image_base_url + show.movie.poster_path}
-          alt=""
-          className="max-md:mx-auto rounded-xl h-104 max-w-70 object-cover"
-        />
+        <div className="relative max-md:mx-auto rounded-xl h-104 max-w-70 overflow-hidden">
+          {!posterLoaded && (
+            <div className="absolute inset-0 bg-gray-700 animate-pulse" />
+          )}
+          <img
+            src={
+              image_base_url.replace("/w500", "/w780") + show.movie.poster_path
+            }
+            srcSet={`${image_base_url + show.movie.poster_path} 500w, ${
+              image_base_url.replace("/w500", "/w780") + show.movie.poster_path
+            } 780w`}
+            sizes="(max-width: 768px) 500px, 780px"
+            alt={show.movie.title}
+            loading="eager"
+            onLoad={() => setPosterLoaded(true)}
+            className={`rounded-xl h-104 max-w-70 object-cover transition-opacity duration-300 ${
+              posterLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        </div>
         <div className="relative flex flex-col gap-3">
           <BlurCircle top="-100px" left="-100px" />
           <p className="text-primary">ENGLISH</p>
@@ -121,11 +138,24 @@ const MovieDetails = () => {
         <div className="flex items-center gap-4 w-max px-4">
           {show.movie.casts.slice(0, 12).map((cast, index) => (
             <div key={index} className="flex flex-col items-center text-center">
-              <img
-                src={image_base_url + cast.profile_path}
-                alt=""
-                className="rounded-full h-20 md:h-20 aspect-square object-cover"
-              />
+              <div className="relative rounded-full h-20 md:h-20 aspect-square overflow-hidden">
+                {!castImagesLoaded[index] && (
+                  <div className="absolute inset-0 bg-gray-700 animate-pulse" />
+                )}
+                <img
+                  src={
+                    image_base_url.replace("/w500", "/w185") + cast.profile_path
+                  }
+                  alt={cast.name}
+                  loading="lazy"
+                  onLoad={() =>
+                    setCastImagesLoaded((prev) => ({ ...prev, [index]: true }))
+                  }
+                  className={`rounded-full h-20 md:h-20 aspect-square object-cover transition-opacity duration-300 ${
+                    castImagesLoaded[index] ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </div>
               <p className="font-medium text-xs mt-3">{cast.name}</p>
             </div>
           ))}
