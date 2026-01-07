@@ -2,6 +2,8 @@
 
 Full-stack movie ticketing experience built with React, Vite, Express, MongoDB, Clerk for auth, Stripe for payments, and TMDB as the movie data source. Users can browse films, pick showtimes, reserve seats, pay securely, and track bookings. Admins can publish shows, review bookings, and monitor revenue.
 
+![image_alt](https://github.com/Chanuka999/movie_ticket_booking_app/blob/41aca7785e85337b8f0fbd7ab72f914cca65a5d9/movie_ticket_Booking.png)
+
 ## Features
 
 - Browse now-playing movies from TMDB with poster/backdrop art
