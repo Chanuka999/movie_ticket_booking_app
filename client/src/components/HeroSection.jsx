@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
   const navigate = useNavigate();
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState({});
 
   const backgrounds = [
     backgroundImage,
@@ -17,6 +18,17 @@ const HeroSection = () => {
     backgroundImage2,
     backgroundImage3,
   ];
+
+  // Preload images
+  useEffect(() => {
+    backgrounds.forEach((src, index) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        setImagesLoaded((prev) => ({ ...prev, [index]: true }));
+      };
+    });
+  }, []);
 
   const moviesData = [
     {
@@ -68,9 +80,11 @@ const HeroSection = () => {
       className="flex flex-col items-start justify-center gap-4 px-6 md:px-16 lg:px-36 bg-cover bg-center h-screen w-full transition-all duration-1000"
       style={{
         backgroundImage: `url(${backgrounds[currentBgIndex]})`,
-
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
+        backgroundPosition: "center",
+        opacity: imagesLoaded[currentBgIndex] ? 1 : 0.7,
+        transition: "opacity 0.5s ease-in-out",
       }}
     >
       <h1 className="text-5xl md:text-[70px] md:leading-18 font-bold max-w-110 text-green-700 transition-all duration-1000">
